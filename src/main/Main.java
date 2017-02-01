@@ -1,5 +1,6 @@
 package main;
 
+import java.awt.*;
 import java.awt.image.BufferedImage;
 import java.io.File;
 import java.io.IOException;
@@ -43,10 +44,6 @@ public class Main {
 		options.addOption(Option.builder("s").longOpt("swap-colours").argName("colour1 colour2").desc("swap the first colour with the second")
 				.numberOfArgs(2).optionalArg(false).build());
 
-		// options.addOption(Option.builder("x").longOpt("rotate").desc("rotates
-		// the image trigonometrically")
-		// .numberOfArgs(1).optionalArg(false).build());
-
 		CommandLineParser clParser = new DefaultParser();
 		CommandLine cl = null;
 		try {
@@ -60,7 +57,7 @@ public class Main {
 			e1.printStackTrace();
 		}
 
-		BufferedImage img = readImage(cl.getOptionValue('i'));
+		Image img = new Image(readImage(cl.getOptionValue('i')));
 		File dest = new File(cl.getOptionValue('o'));
 		Iterator<Option> it = cl.iterator();
 		while (it.hasNext()) {
@@ -76,34 +73,30 @@ public class Main {
 				if (values.length == 2)
 					mode = values[1];
 				if (mode.equals("auto"))
-					img = Scalr.resize(img, Scalr.Mode.AUTOMATIC, width, height);
+					img.resize(Scalr.Mode.AUTOMATIC, width, height);
 				else if (mode.equals("exact"))
-					img = Scalr.resize(img, Scalr.Mode.FIT_EXACT, width, height);
+                    img.resize(Scalr.Mode.FIT_EXACT, width, height);
 				else if (mode.equals("width"))
-					img = Scalr.resize(img, Scalr.Mode.FIT_TO_WIDTH, width, height);
+                    img.resize(Scalr.Mode.FIT_TO_WIDTH, width, height);
 				else if (mode.equals("height"))
-					img = Scalr.resize(img, Scalr.Mode.FIT_TO_HEIGHT, width, height);
+                    img.resize(Scalr.Mode.FIT_TO_HEIGHT, width, height);
 				else {
-					img = Scalr.resize(img, Scalr.Mode.AUTOMATIC, width, height);
+                    img.resize(Scalr.Mode.AUTOMATIC, width, height);
 					System.out.println("Resize mode set to 'auto'");
 				}
 			} else if (o == 'p') {
 				int pad = Integer.parseInt(opt.getValue(0));
-				img = Scalr.pad(img, pad);
+				img.pad(pad, new Color(0xFF000000));
 			} else if (o == 'c') {
 				int x = Integer.parseInt(values[0]);
 				int y = Integer.parseInt(values[1]);
 				int dx = Integer.parseInt(values[2].split("x")[0]);
 				int dy = Integer.parseInt(values[2].split("x")[1]);
-				img = Scalr.crop(img, x, y, dx, dy);
+				img.crop(x, y, dx, dy);
 			} else if (o == 's') {
-				int colour1 = parseInt(values[0]);
-				int colour2 = parseInt(values[1]);
-				for (int x = 0; x < img.getWidth(); x++)
-					for (int y = 0; y < img.getHeight(); y++) {
-						if (img.getRGB(x, y) == colour1)
-							img.setRGB(x, y, colour2);
-					}
+				ColourMatcher cm = new ColourMatcher(values[0]);
+				Color c2 = new Color(Integer.parseInt(values[1], 16));
+				img.swapColours(cm, c2);
 			}
 
 		}
@@ -111,50 +104,11 @@ public class Main {
 		String[] aux = dest.getPath().split("\\.");
 		String format = aux[aux.length - 1];
 		try {
-			ImageIO.write(img, format, dest);
+			ImageIO.write(img.getImage(), format, dest);
 		} catch (IOException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
-
-	}
-
-	private static void swapColours(BufferedImage image, String colour1, String colour2){
-
-		String[] c1 = new String[4];
-		String[] c2 = new String[4];
-
-		c1 = colour1.split("[0-9a-fA-F]");
-		c2 = colour2.split("[0-9a-fA-F]");
-
-		BufferedImage newImg = new BufferedImage(img);
-
-		int compA = 0;
-		int compR = 0;
-		int compG = 0;
-		int compB =0;
-		for (int x = 0; x < img.getWidth(); x++)
-			for (int y = 0; y < img.getHeight(); y++) {
-				comp = 
-				if (img.getRGB(x, y) == colour1)
-					img.setRGB(x, y, colour2);
-			}
-
-
-
-	}
-
-
-	public static int parseInt(String s) {
-		s = s.toLowerCase();
-		if (s.startsWith("0x"))
-			return (int) Long.parseLong(s.substring(2), 16);
-		else if (s.startsWith("0b"))
-			return (int) Long.parseLong(s.substring(2), 2);
-		else if (s.startsWith("0"))
-			return (int) Long.parseLong(s, 8);
-		else
-			return (int) Long.parseLong(s);
 
 	}
 
