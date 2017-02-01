@@ -85,7 +85,7 @@ public class Main {
 					img = Scalr.resize(img, Scalr.Mode.FIT_TO_HEIGHT, width, height);
 				else {
 					img = Scalr.resize(img, Scalr.Mode.AUTOMATIC, width, height);
-					System.out.println("Warning. Resize mode set to 'auto'");
+					System.out.println("Resize mode set to 'auto'");
 				}
 			} else if (o == 'p') {
 				int pad = Integer.parseInt(opt.getValue(0));
@@ -119,6 +119,32 @@ public class Main {
 
 	}
 
+	private static void swapColours(BufferedImage image, String colour1, String colour2){
+
+		String[] c1 = new String[4];
+		String[] c2 = new String[4];
+
+		c1 = colour1.split("[0-9a-fA-F]");
+		c2 = colour2.split("[0-9a-fA-F]");
+
+		BufferedImage newImg = new BufferedImage(img);
+
+		int compA = 0;
+		int compR = 0;
+		int compG = 0;
+		int compB =0;
+		for (int x = 0; x < img.getWidth(); x++)
+			for (int y = 0; y < img.getHeight(); y++) {
+				comp = 
+				if (img.getRGB(x, y) == colour1)
+					img.setRGB(x, y, colour2);
+			}
+
+
+
+	}
+
+
 	public static int parseInt(String s) {
 		s = s.toLowerCase();
 		if (s.startsWith("0x"))
@@ -136,10 +162,6 @@ public class Main {
 		BufferedImage img = null;
 		try {
 			img = ImageIO.read(new File(path));
-			BufferedImage convertedImg = new BufferedImage(img.getWidth(), img.getHeight(),
-					BufferedImage.TYPE_INT_ARGB);
-			convertedImg.getGraphics().drawImage(img, 0, 0, null);
-			img = convertedImg;
 		} catch (IOException e) {
 			e.printStackTrace();
 		}
