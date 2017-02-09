@@ -1,12 +1,12 @@
 package main;
 
-import java.awt.*;
 import java.awt.image.BufferedImage;
 import java.io.File;
 import java.io.IOException;
 import java.util.Iterator;
 
 import javax.imageio.ImageIO;
+import javax.swing.*;
 
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.CommandLineParser;
@@ -15,11 +15,15 @@ import org.apache.commons.cli.HelpFormatter;
 import org.apache.commons.cli.Option;
 import org.apache.commons.cli.Options;
 import org.apache.commons.cli.ParseException;
-import org.imgscalr.Scalr;
 
 public class Main {
 
 	public static void main(String[] args) {
+
+		if(args.length==0)
+			startGUI();
+
+		System.out.println("GUI opened");
 
 		Options options = new Options();
 
@@ -48,7 +52,7 @@ public class Main {
 		CommandLine cl = null;
 		try {
 			cl = clParser.parse(options, args);
-			if (cl.hasOption('h') || !cl.hasOption('i') || !cl.hasOption('o')) {
+			if (cl.hasOption('h')) {
 				HelpFormatter hl = new HelpFormatter();
 				hl.printHelp("imgEdit -i <INPUT FILE> [operations] -o <OUTPUT FILE>", options);
 				return;
@@ -57,7 +61,7 @@ public class Main {
 			e1.printStackTrace();
 		}
 
-		Image img = new Image(readImage(cl.getOptionValue('i')));
+		//Image img = new Image(readImage(cl.getOptionValue('i')));
 		File dest = new File(cl.getOptionValue('o'));
 		Iterator<Option> it = cl.iterator();
 		while (it.hasNext()) {
@@ -65,51 +69,29 @@ public class Main {
 			char o = opt.getOpt().charAt(0);
 			if (o == 'i' || o == 'o' || o == 'h')
 				continue;
+
 			String[] values = opt.getValues();
-			if (o == 'r') {
-				int width = Integer.parseInt(values[0].split("x")[0]);
-				int height = Integer.parseInt(values[0].split("x")[1]);
-				String mode = "auto";
-				if (values.length == 2)
-					mode = values[1];
-				if (mode.equals("auto"))
-					img.resize(Scalr.Mode.AUTOMATIC, width, height);
-				else if (mode.equals("exact"))
-                    img.resize(Scalr.Mode.FIT_EXACT, width, height);
-				else if (mode.equals("width"))
-                    img.resize(Scalr.Mode.FIT_TO_WIDTH, width, height);
-				else if (mode.equals("height"))
-                    img.resize(Scalr.Mode.FIT_TO_HEIGHT, width, height);
-				else {
-                    img.resize(Scalr.Mode.AUTOMATIC, width, height);
-					System.out.println("Resize mode set to 'auto'");
-				}
-			} else if (o == 'p') {
-				int pad = Integer.parseInt(opt.getValue(0));
-				img.pad(pad, new Color(0xFF000000));
-			} else if (o == 'c') {
-				int x = Integer.parseInt(values[0]);
-				int y = Integer.parseInt(values[1]);
-				int dx = Integer.parseInt(values[2].split("x")[0]);
-				int dy = Integer.parseInt(values[2].split("x")[1]);
-				img.crop(x, y, dx, dy);
-			} else if (o == 's') {
-				ColourMatcher cm = new ColourMatcher(values[0]);
-				Color c2 = new Color(Integer.parseInt(values[1], 16));
-				img.swapColours(cm, c2);
-			}
 
 		}
 
 		String[] aux = dest.getPath().split("\\.");
 		String format = aux[aux.length - 1];
-		try {
-			ImageIO.write(img.getImage(), format, dest);
-		} catch (IOException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		}
+//		try {
+//			ImageIO.write(img, format, dest);
+//		} catch (IOException e) {
+//			// TODO Auto-generated catch block
+//			e.printStackTrace();
+//		}
 
+	}
+
+	private static void startGUI(){
+		JFrame frame = new JFrame("GUI");
+		frame.setContentPane(new GUI().root);
+		frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+		frame.pack();
+		frame.setVisible(true);
+		frame.setResizable(false);
 	}
 
 	public static BufferedImage readImage(String path) {

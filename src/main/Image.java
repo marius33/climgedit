@@ -59,7 +59,7 @@ public class Image {
 
     public void resize(ResizeMode mode, int width, int height) {
         AffineTransform afTransform = AffineTransform.getScaleInstance(width/image.getWidth(), height/image.getHeight());
-        AffineTransformOp op = new AffineTransformOp(afTransform, Affine)
+        //AffineTransformOp op = new AffineTransformOp(afTransform, Affine)
     }
 
     public void pad(int left, int right, int top, int bottom, Color c) {
