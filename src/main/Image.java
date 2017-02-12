@@ -17,6 +17,10 @@ import java.util.stream.IntStream;
  */
 public class Image {
 
+    public BufferedImage getImage() {
+        return image;
+    }
+
     private BufferedImage image;
 
     public Image() {
@@ -32,12 +36,13 @@ public class Image {
     }
 
     public void rotate(double theta, RotateMode mode) {
+
         double radians = Math.toRadians(theta);
 
         int origWidth = image.getWidth();
         int origHeight = image.getHeight();
 
-        if (mode.equals(RotateMode.PAD) || mode.equals(RotateMode.PAD_RESIZE)) {
+        if (mode.equals(RotateMode.PAD) || mode.equals(RotateMode.PAD_KEEP_SIZE)) {
             int diagonal = (int) Math.round(Math.sqrt(image.getHeight() * image.getHeight() + image.getWidth() * image.getWidth()));
             double alpha = Math.asin(image.getWidth() / diagonal);
             int newWidth = (int) Math.abs(diagonal * Math.cos(alpha + theta));
@@ -45,21 +50,70 @@ public class Image {
             pad((newWidth - image.getWidth()) / 2, (newHeight - image.getHeight()) / 2);
         }
 
-        int anchorX = image.getWidth() / 2;
-        int anchorY = image.getHeight() / 2;
+        double anchorX = image.getWidth() / (double) 2;
+        double anchorY = image.getHeight() / (double) 2;
         AffineTransform afTransform = AffineTransform.getRotateInstance(radians, anchorX, anchorY);
         AffineTransformOp afTransfOp = new AffineTransformOp(afTransform, AffineTransformOp.TYPE_BILINEAR);
-        image = afTransfOp.filter(image, image);
+        BufferedImage dest = new BufferedImage(origWidth, origHeight, image.getType());
+        image = afTransfOp.filter(image, dest);
 
         if(mode.equals(RotateMode.PAD)){
-            resize(ResizeMode.FIT, origWidth, origHeight);
+            resize(origWidth, origHeight, ResizeMode.EXACT);
         }
 
     }
 
-    public void resize(ResizeMode mode, int width, int height) {
-        AffineTransform afTransform = AffineTransform.getScaleInstance(width/image.getWidth(), height/image.getHeight());
-        //AffineTransformOp op = new AffineTransformOp(afTransform, Affine)
+    public void resize(int width, int height, ResizeMode mode) {
+
+        int srcWidth = image.getWidth();
+        int srcHeight = image.getHeight();
+        int dstWidth;
+        int dstHeight;
+        double wRatio;
+        double hRatio;
+        if(mode.equals(ResizeMode.EXACT)){
+            dstWidth = width;
+            dstHeight = height;
+            wRatio = (double) dstWidth/srcWidth;
+            hRatio = (double) dstHeight/srcHeight;
+        }
+        else if(mode.equals(ResizeMode.CROP)){
+            wRatio = (double) width/srcWidth;
+            hRatio = (double) height/srcHeight;
+            double ratio = Math.max(wRatio, hRatio);
+            dstWidth = (int) (srcWidth*ratio);
+            dstHeight = (int) (srcHeight*ratio);
+            wRatio = ratio;
+            hRatio = ratio;
+        }else if(mode.equals(ResizeMode.PAD)){
+            wRatio = (double) width/srcWidth;
+            hRatio = (double) height/srcHeight;
+            double ratio = Math.min(wRatio, hRatio);
+            dstWidth = (int) (srcWidth*ratio);
+            dstHeight = (int) (srcHeight*ratio);
+            wRatio = ratio;
+            hRatio = ratio;
+        }else {
+            dstWidth = srcWidth;
+            dstHeight = srcHeight;
+            wRatio = 1;
+            hRatio = 1;
+        }
+
+        AffineTransform transform = AffineTransform.getScaleInstance(wRatio, hRatio);
+        AffineTransformOp op = new AffineTransformOp(transform, AffineTransformOp.TYPE_BICUBIC);
+        // dest = new BufferedImage(dstWidth, dstHeight, image.getType());
+        image = op.filter(image, null);
+        //image = dest;
+
+        int dx = dstWidth - width;
+        int dy = dstHeight - height;
+
+        if(mode.equals(ResizeMode.CROP))
+            crop(dx/2, dy/2, width, height);
+        else
+            pad(dx/2, dy/2);
+
     }
 
     public void pad(int left, int right, int top, int bottom, Color c) {
@@ -74,7 +128,7 @@ public class Image {
     }
 
     public void pad(int left, int right, int top, int bottom) {
-        pad(left, right, top, bottom, new Color(0));
+        pad(left, right, top, bottom, new Color(1));
     }
 
     public void pad(int leftRight, int topBottom, Color c) {
@@ -82,7 +136,7 @@ public class Image {
     }
 
     public void pad(int leftRight, int topBottom) {
-        pad(leftRight, topBottom, new Color(0));
+        pad(leftRight, topBottom, new Color(1));
     }
 
     public void pad(int thickness, Color c) {
@@ -90,7 +144,7 @@ public class Image {
     }
 
     public void pad(int thickness) {
-        pad(thickness, new Color(0));
+        pad(thickness, new Color(1));
     }
 
     public void crop(int startX, int startY, int width, int height) {
@@ -98,7 +152,7 @@ public class Image {
         Graphics g = dest.getGraphics();
         g.drawImage(image, 0, 0, width, height,
                 startX, startY, startX + width, startY + height,
-                new Color(0), null);
+                new Color(1), null);
         g.dispose();
         image = dest;
 
@@ -147,7 +201,7 @@ public class Image {
 
     public enum RotateMode {
 
-        CROP(0), PAD(1), PAD_RESIZE(2);
+        CROP(0), PAD(1), PAD_KEEP_SIZE(2);
 
         private final int v;
 
@@ -163,7 +217,7 @@ public class Image {
 
     public enum ResizeMode {
 
-        FIT_PAD(0), FIT_CROP(1), FIT(2), PAD(3);
+        PAD(0), CROP(1), EXACT(2);
 
         private final int v;
 

@@ -3,11 +3,11 @@ package main;
 import java.awt.image.BufferedImage;
 import java.io.File;
 import java.io.IOException;
-import java.util.Iterator;
 
 import javax.imageio.ImageIO;
 import javax.swing.*;
 
+import main.gui.GUI;
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.CommandLineParser;
 import org.apache.commons.cli.DefaultParser;
@@ -61,21 +61,21 @@ public class Main {
 			e1.printStackTrace();
 		}
 
-		//Image img = new Image(readImage(cl.getOptionValue('i')));
-		File dest = new File(cl.getOptionValue('o'));
-		Iterator<Option> it = cl.iterator();
-		while (it.hasNext()) {
-			Option opt = it.next();
-			char o = opt.getOpt().charAt(0);
-			if (o == 'i' || o == 'o' || o == 'h')
-				continue;
-
-			String[] values = opt.getValues();
-
-		}
-
-		String[] aux = dest.getPath().split("\\.");
-		String format = aux[aux.length - 1];
+//		Image img = new Image(readImage(cl.getOptionValue('i')));
+//		File dest = new File(cl.getOptionValue('o'));
+//		Iterator<Option> it = cl.iterator();
+//		while (it.hasNext()) {
+//			Option opt = it.next();
+//			char o = opt.getOpt().charAt(0);
+//			if (o == 'i' || o == 'o' || o == 'h')
+//				continue;
+//
+//			String[] values = opt.getValues();
+//
+//		}
+//
+//		String[] aux = dest.getPath().split("\\.");
+//		String format = aux[aux.length - 1];
 //		try {
 //			ImageIO.write(img, format, dest);
 //		} catch (IOException e) {
