@@ -9,6 +9,7 @@ import java.awt.image.Raster;
 import java.awt.image.WritableRaster;
 import java.io.File;
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.stream.IntStream;
 
@@ -57,7 +58,7 @@ public class Image {
         BufferedImage dest = new BufferedImage(origWidth, origHeight, image.getType());
         image = afTransfOp.filter(image, dest);
 
-        if(mode.equals(RotateMode.PAD)){
+        if (mode.equals(RotateMode.PAD)) {
             resize(origWidth, origHeight, ResizeMode.EXACT);
         }
 
@@ -71,29 +72,28 @@ public class Image {
         int dstHeight;
         double wRatio;
         double hRatio;
-        if(mode.equals(ResizeMode.EXACT)){
+        if (mode.equals(ResizeMode.EXACT)) {
             dstWidth = width;
             dstHeight = height;
-            wRatio = (double) dstWidth/srcWidth;
-            hRatio = (double) dstHeight/srcHeight;
-        }
-        else if(mode.equals(ResizeMode.CROP)){
-            wRatio = (double) width/srcWidth;
-            hRatio = (double) height/srcHeight;
+            wRatio = (double) dstWidth / srcWidth;
+            hRatio = (double) dstHeight / srcHeight;
+        } else if (mode.equals(ResizeMode.CROP)) {
+            wRatio = (double) width / srcWidth;
+            hRatio = (double) height / srcHeight;
             double ratio = Math.max(wRatio, hRatio);
-            dstWidth = (int) (srcWidth*ratio);
-            dstHeight = (int) (srcHeight*ratio);
+            dstWidth = (int) (srcWidth * ratio);
+            dstHeight = (int) (srcHeight * ratio);
             wRatio = ratio;
             hRatio = ratio;
-        }else if(mode.equals(ResizeMode.PAD)){
-            wRatio = (double) width/srcWidth;
-            hRatio = (double) height/srcHeight;
+        } else if (mode.equals(ResizeMode.PAD)) {
+            wRatio = (double) width / srcWidth;
+            hRatio = (double) height / srcHeight;
             double ratio = Math.min(wRatio, hRatio);
-            dstWidth = (int) (srcWidth*ratio);
-            dstHeight = (int) (srcHeight*ratio);
+            dstWidth = (int) (srcWidth * ratio);
+            dstHeight = (int) (srcHeight * ratio);
             wRatio = ratio;
             hRatio = ratio;
-        }else {
+        } else {
             dstWidth = srcWidth;
             dstHeight = srcHeight;
             wRatio = 1;
@@ -109,10 +109,10 @@ public class Image {
         int dx = dstWidth - width;
         int dy = dstHeight - height;
 
-        if(mode.equals(ResizeMode.CROP))
-            crop(dx/2, dy/2, width, height);
+        if (mode.equals(ResizeMode.CROP))
+            crop(dx / 2, dy / 2, width, height);
         else
-            pad(dx/2, dy/2);
+            pad(dx / 2, dy / 2);
 
     }
 
@@ -158,25 +158,58 @@ public class Image {
 
     }
 
+    public void crop(int width, int height) {
+        int startX = (image.getWidth() - width) / 2;
+        int startY = (image.getHeight() - height) / 2;
+        crop(startX, startY, width, height);
+    }
+
     public void replaceColors(Color src, Color dst, int threshold) {
         Raster srcData = image.getData();
         WritableRaster destData = srcData.createCompatibleWritableRaster();
-        int[] hNumbers = IntStream.range(0, image.getHeight()).toArray();
 
         int[] rgbaSrc = new int[]{src.getRed(), src.getGreen(), src.getBlue(), src.getAlpha()};
         int[] rgbaDest = new int[]{dst.getRed(), dst.getGreen(), dst.getBlue(), dst.getAlpha()};
 
-        Arrays.stream(hNumbers).parallel().forEach(y -> {
-            for (int x = image.getWidth() - 1; x >= 0; x--) {
-
+        for (int x = 0; x < image.getWidth(); x++)
+            for (int y = 0; y < image.getHeight(); y++) {
                 int[] channels = new int[4];
                 channels = srcData.getPixel(x, y, channels);
-                for (int i = 0; i < 4; i++) {
-                    if (channels[i] <= (rgbaSrc[i] + threshold) && channels[i] >= (rgbaSrc[i] - threshold))
-                        destData.setPixel(x, y, rgbaDest);
-                }
+                if (channels[0]*channels[3] <= (rgbaSrc[0] + threshold) && channels[0]*channels[3] >= (rgbaSrc[0] - threshold)) {
+                    if (channels[1]*channels[3] <= (rgbaSrc[1] + threshold) && channels[1]*channels[3] >= (rgbaSrc[1] - threshold)) {
+                        if (channels[2]*channels[3] <= (rgbaSrc[2] + threshold) && channels[2]*channels[3] >= (rgbaSrc[3] - threshold)) {
+                            destData.setPixel(x, y, rgbaDest);
+                        } else
+                            destData.setPixel(x, y, channels);
+                    } else
+                        destData.setPixel(x, y, channels);
+                } else
+                    destData.setPixel(x, y, channels);
             }
-        });
+
+//        int threadCount = Runtime.getRuntime().availableProcessors();
+//        ArrayList<Thread> threads = new ArrayList<Thread>(threadCount - 1);
+//
+//        int rangePerThread = image.getHeight() / threadCount;
+//        int mainThreadRange = rangePerThread + (image.getHeight() % threadCount);
+//
+//        for (int t = 1; t < threadCount; t++) {
+//            final int threadNumber = t;
+//            threads.add(new Thread(new Runnable() {
+//                @Override
+//                public void run() {
+//                    for (int y = (threadNumber * rangePerThread); y < ((threadNumber + 1) * rangePerThread); y++)
+//                        for (int x = 0; x < image.getWidth(); x++) {
+//                            int[] channels = new int[4];
+//                            channels = srcData.getPixel(x, y, channels);
+//                            for (int i = 0; i < 4; i++) {
+//                                if (channels[i] <= (rgbaSrc[i] + threshold) && channels[i] >= (rgbaSrc[i] - threshold))
+//                                    destData.setPixel(x, y, rgbaDest);
+//                            }
+//                        }
+//                }
+//            }));
+//        }
 
         image.setData(destData);
     }
@@ -186,15 +219,14 @@ public class Image {
         WritableRaster destData = srcData.createCompatibleWritableRaster();
         int[] hNumbers = IntStream.range(0, image.getHeight()).toArray();
 
-        Arrays.stream(hNumbers).parallel().forEach(y -> {
-            for (int x = image.getWidth() - 1; x >= 0; x--) {
-
+        for (int x = 0; x < image.getWidth(); x++) {
+            for (int y = 0; y < image.getHeight(); y++) {
                 int[] channels = new int[4];
                 channels = srcData.getPixel(x, y, channels);
                 Color replacement = replacer.replace(new Color(channels[0], channels[1], channels[2], channels[3]));
                 destData.setPixel(x, y, new int[]{replacement.getRed(), replacement.getGreen(), replacement.getBlue(), replacement.getAlpha()});
             }
-        });
+        }
 
         image.setData(destData);
     }

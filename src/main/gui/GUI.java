@@ -1,11 +1,12 @@
 package main.gui;
 
+import main.CLIOptionsParser;
+
 import javax.imageio.ImageIO;
 import javax.swing.*;
 import java.awt.*;
 import java.awt.Image;
-import java.awt.event.MouseAdapter;
-import java.awt.event.MouseEvent;
+import java.awt.event.*;
 import java.awt.image.BufferedImage;
 import java.io.File;
 import java.io.IOException;
@@ -34,7 +35,7 @@ public class GUI {
         openButton.addMouseListener(new MouseAdapter() {
             @Override
             public void mouseClicked(MouseEvent e) {
-                if(preferredDimension == null)
+                if (preferredDimension == null)
                     preferredDimension = previewPanel.getSize();
                 final JFileChooser fc = new JFileChooser();
                 int returnVal = fc.showOpenDialog(root);
@@ -58,29 +59,42 @@ public class GUI {
                 int returnVal = fc.showOpenDialog(root);
             }
         });
-        executeButton.addMouseListener(new MouseAdapter() {
-            @Override
-            public void mouseClicked(MouseEvent e) {
 
+        execArgs.addKeyListener(new KeyAdapter() {
+            @Override
+            public void keyPressed(KeyEvent e) {
+                if (e.getKeyChar() == '\n')
+                    executeButton.doClick();
+                else
+                    super.keyPressed(e);
+            }
+        });
+        
+        executeButton.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
                 String[] args = execArgs.getText().split("\\s+");
                 System.out.println(Arrays.toString(args));
                 int op = opsList.getSelectedIndex();
                 switch (op) {
-                    case 0: {
-                        int angle = Integer.parseInt(args[0]);
-                        main.Image.RotateMode mode;
-                        if (args[1].equalsIgnoreCase("crop")) {
-                            mode = main.Image.RotateMode.CROP;
-                        } else if (args[1].equalsIgnoreCase("pad")) {
-                            mode = main.Image.RotateMode.PAD;
-                        } else mode = main.Image.RotateMode.PAD_KEEP_SIZE;
-
-                        activeImage.rotate(angle, mode);
-                        displayImage(activeImage.getImage());
-
-                    }
+                    case 0:
+                        CLIOptionsParser.parseRotate(activeImage, args);
+                        break;
+                    case 1:
+                        CLIOptionsParser.parseResize(activeImage, args);
+                        break;
+                    case 2:
+                        CLIOptionsParser.parsePad(activeImage, args);
+                        break;
+                    case 3:
+                        CLIOptionsParser.parseCrop(activeImage, args);
+                        break;
+                    case 4:
+                        CLIOptionsParser.parseReplaceColors(activeImage, args);
+                        break;
                 }
 
+                displayImage(activeImage.getImage());
             }
         });
     }

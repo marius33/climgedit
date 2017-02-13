@@ -102,11 +102,50 @@ public class CLIOptionsParser {
 
     public static boolean parseCrop(Image img, String[] args){
 
-        int sx = Integer.parseInt(args[0]);
-        int sy = Integer.parseInt(args[1]);
-        int w = Integer.parseInt(args[2]);
-        int h = Integer.parseInt(args[3]);
-        img.crop(sx, sy, w, h);
+        if(args.length==4) {
+            int sx = Integer.parseInt(args[0]);
+            int sy = Integer.parseInt(args[1]);
+            int w = Integer.parseInt(args[2]);
+            int h = Integer.parseInt(args[3]);
+            img.crop(sx, sy, w, h);
+            return true;
+        }
+        else if(args.length == 2){
+            int w = Integer.parseInt(args[0]);
+            int h = Integer.parseInt(args[1]);
+            img.crop(w, h);
+            return true;
+        }
+        return false;
+    }
+
+    public static boolean parseReplaceColors(Image img, String[] args){
+
+        Color target;
+        Color replacement;
+        int threshold;
+        if(args[0].startsWith("0x") || args[0].startsWith("0X")) {
+            int argb = (int) Long.parseLong(args[0].substring(2), 16);
+            target = new Color(argb, true);
+        }
+        else {
+            int argb = (int) Long.parseLong(args[0]);
+            target = new Color(argb, true);
+        }
+
+        if(args[1].startsWith("0x") || args[1].startsWith("0X")) {
+            int argb = (int) Long.parseLong(args[1].substring(2), 16);
+            replacement = new Color(argb, true);
+        }
+        else {
+            int argb = (int) Long.parseLong(args[1]);
+            replacement = new Color(argb, true);
+        }
+
+        threshold = Integer.parseInt(args[2]);
+
+        img.replaceColors(target, replacement, threshold);
+
         return true;
 
     }
