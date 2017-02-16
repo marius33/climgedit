@@ -18,6 +18,8 @@ import java.util.stream.IntStream;
  */
 public class Image {
 
+    public static final double DISTANCE_NORMAL = 255/Math.sqrt(195075);
+
     public BufferedImage getImage() {
         return image;
     }
@@ -30,10 +32,24 @@ public class Image {
 
     public Image(String path) throws IOException {
         image = ImageIO.read(new File(path));
+        if(image.getType()!=BufferedImage.TYPE_INT_ARGB){
+            BufferedImage aux = new BufferedImage(image.getWidth(), image.getHeight(), BufferedImage.TYPE_INT_ARGB);
+            Graphics g = aux.getGraphics();
+            g.drawImage(image, 0, 0 ,null);
+            g.dispose();
+            image = aux;
+        }
     }
 
     public Image(BufferedImage img) {
         image = img;
+        if(image.getType()!=BufferedImage.TYPE_INT_ARGB){
+            BufferedImage aux = new BufferedImage(image.getWidth(), image.getHeight(), BufferedImage.TYPE_INT_ARGB);
+            Graphics g = aux.getGraphics();
+            g.drawImage(image, 0, 0 ,null);
+            g.dispose();
+            image = aux;
+        }
     }
 
     public void rotate(double theta, RotateMode mode) {
@@ -184,12 +200,12 @@ public class Image {
                 double dg = rgbaSrc[1] - channels[1];
                 double db = rgbaSrc[2] - channels[2];
 
-                double distance = Math.sqrt(dr * dr + dg * dg + db * db);
+                double distance = Math.sqrt(dr * dr + dg * dg + db * db)*DISTANCE_NORMAL;
                 int alphaDistance = Math.abs(rgbaSrc[3]-channels[3]);
 
-                if (distance <= colorRange && alphaDistance <= alphaRange) {
+                if (distance <= colorRange && alphaDistance <= alphaRange)
                     destData.setPixel(x, y, rgbaDest);
-                } else
+                else
                     destData.setPixel(x, y, channels);
 
 

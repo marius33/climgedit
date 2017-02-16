@@ -122,8 +122,8 @@ public class GUI {
         g.fillRect(0, 0, width, height);
         g.setColor(dark);
         boolean shift = false;
-        for (int x = 0; x < (width + 2 * checkeredSize); x += (2 * checkeredSize))
-            for (int y = 0; y < (height + 2 * checkeredSize); y += checkeredSize) {
+        for (int x = 0; x < (width + checkeredSize); x += (2 * checkeredSize))
+            for (int y = 0; y < (height + checkeredSize); y += checkeredSize) {
                 if (shift)
                     g.fillRect(x + checkeredSize, y, checkeredSize, checkeredSize);
                 else
