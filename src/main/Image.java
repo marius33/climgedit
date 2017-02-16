@@ -173,18 +173,21 @@ public class Image {
 
         for (int x = 0; x < image.getWidth(); x++)
             for (int y = 0; y < image.getHeight(); y++) {
+
                 int[] channels = new int[4];
                 channels = srcData.getPixel(x, y, channels);
-                if (channels[0]*channels[3] <= (rgbaSrc[0] + threshold) && channels[0]*channels[3] >= (rgbaSrc[0] - threshold)) {
-                    if (channels[1]*channels[3] <= (rgbaSrc[1] + threshold) && channels[1]*channels[3] >= (rgbaSrc[1] - threshold)) {
-                        if (channels[2]*channels[3] <= (rgbaSrc[2] + threshold) && channels[2]*channels[3] >= (rgbaSrc[3] - threshold)) {
-                            destData.setPixel(x, y, rgbaDest);
-                        } else
-                            destData.setPixel(x, y, channels);
-                    } else
-                        destData.setPixel(x, y, channels);
+                double dr = rgbaSrc[0] - channels[0];
+                double dg = rgbaSrc[1] - channels[1];
+                double db = rgbaSrc[2] - channels[2];
+
+                double distance = Math.sqrt(dr * dr + dg * dg + db * db);
+
+                if (distance*(Math.abs(rgbaSrc[3]-channels[3])) <= threshold) {
+                    destData.setPixel(x, y, rgbaDest);
                 } else
                     destData.setPixel(x, y, channels);
+
+
             }
 
 //        int threadCount = Runtime.getRuntime().availableProcessors();

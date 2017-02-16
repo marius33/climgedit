@@ -32,9 +32,37 @@ public class GUI {
 
         createUIComponents();
 
-        openButton.addMouseListener(new MouseAdapter() {
+        executeButton.addActionListener(new ActionListener() {
             @Override
-            public void mouseClicked(MouseEvent e) {
+            public void actionPerformed(ActionEvent e) {
+                String[] args = execArgs.getText().split("\\s+");
+                System.out.println(Arrays.toString(args));
+                int op = opsList.getSelectedIndex();
+                switch (op) {
+                    case 0:
+                        CLIOptionsParser.parseRotate(activeImage, args);
+                        break;
+                    case 1:
+                        CLIOptionsParser.parseResize(activeImage, args);
+                        break;
+                    case 2:
+                        CLIOptionsParser.parsePad(activeImage, args);
+                        break;
+                    case 3:
+                        CLIOptionsParser.parseCrop(activeImage, args);
+                        break;
+                    case 4:
+                        CLIOptionsParser.parseReplaceColors(activeImage, args);
+                        break;
+                }
+
+                displayImage(activeImage.getImage());
+            }
+        });
+
+        openButton.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
                 if (preferredDimension == null)
                     preferredDimension = previewPanel.getSize();
                 final JFileChooser fc = new JFileChooser();
@@ -69,34 +97,8 @@ public class GUI {
                     super.keyPressed(e);
             }
         });
-        
-        executeButton.addActionListener(new ActionListener() {
-            @Override
-            public void actionPerformed(ActionEvent e) {
-                String[] args = execArgs.getText().split("\\s+");
-                System.out.println(Arrays.toString(args));
-                int op = opsList.getSelectedIndex();
-                switch (op) {
-                    case 0:
-                        CLIOptionsParser.parseRotate(activeImage, args);
-                        break;
-                    case 1:
-                        CLIOptionsParser.parseResize(activeImage, args);
-                        break;
-                    case 2:
-                        CLIOptionsParser.parsePad(activeImage, args);
-                        break;
-                    case 3:
-                        CLIOptionsParser.parseCrop(activeImage, args);
-                        break;
-                    case 4:
-                        CLIOptionsParser.parseReplaceColors(activeImage, args);
-                        break;
-                }
 
-                displayImage(activeImage.getImage());
-            }
-        });
+
     }
 
     void displayImage(java.awt.Image img) {
