@@ -123,7 +123,7 @@ public class CLIOptionsParser {
 
         Color target;
         Color replacement;
-        int threshold;
+        int range;
         if(args[0].startsWith("0x") || args[0].startsWith("0X")) {
             int argb = (int) Long.parseLong(args[0].substring(2), 16);
             target = new Color(argb, true);
@@ -142,9 +142,11 @@ public class CLIOptionsParser {
             replacement = new Color(argb, true);
         }
 
-        threshold = Integer.parseInt(args[2]);
-
-        img.replaceColors(target, replacement, threshold);
+        range = Integer.parseInt(args[2]);
+        if(args.length==4)
+            img.replaceColors(target, replacement, range, Integer.parseInt(args[3]));
+        else
+            img.replaceColors(target, replacement, range);
 
         return true;
 

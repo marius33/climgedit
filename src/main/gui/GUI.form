@@ -10,10 +10,10 @@
       <alignmentY value="0.0"/>
       <doubleBuffered value="true"/>
       <inheritsPopupMenu value="false"/>
-      <maximumSize width="1024" height="768"/>
-      <minimumSize width="1024" height="768"/>
+      <maximumSize width="-1" height="-1"/>
+      <minimumSize width="-1" height="-1"/>
       <opaque value="true"/>
-      <preferredSize width="1024" height="768"/>
+      <preferredSize width="800" height="600"/>
     </properties>
     <border type="none"/>
     <children>

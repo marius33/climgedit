@@ -164,7 +164,11 @@ public class Image {
         crop(startX, startY, width, height);
     }
 
-    public void replaceColors(Color src, Color dst, int threshold) {
+    public void replaceColors(Color src, Color dst, int range){
+        replaceColors(src, dst, range, range);
+    }
+
+    public void replaceColors(Color src, Color dst, int colorRange, int alphaRange) {
         Raster srcData = image.getData();
         WritableRaster destData = srcData.createCompatibleWritableRaster();
 
@@ -181,8 +185,9 @@ public class Image {
                 double db = rgbaSrc[2] - channels[2];
 
                 double distance = Math.sqrt(dr * dr + dg * dg + db * db);
+                int alphaDistance = Math.abs(rgbaSrc[3]-channels[3]);
 
-                if (distance*(Math.abs(rgbaSrc[3]-channels[3])) <= threshold) {
+                if (distance <= colorRange && alphaDistance <= alphaRange) {
                     destData.setPixel(x, y, rgbaDest);
                 } else
                     destData.setPixel(x, y, channels);
