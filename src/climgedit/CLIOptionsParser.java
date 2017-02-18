@@ -1,4 +1,4 @@
-package main;
+package climgedit;
 
 import java.awt.*;
 
@@ -10,15 +10,17 @@ public class CLIOptionsParser {
     public static boolean parseRotate(Image img, String[] args){
 
         double theta = Double.parseDouble(args[0]);
-        Image.RotateMode mode;
-        if(args[1].equalsIgnoreCase("crop"))
-            mode = Image.RotateMode.CROP;
-        else if(args[1].equalsIgnoreCase("pad"))
-            mode = Image.RotateMode.PAD;
-        else if(args[1].equalsIgnoreCase("pad-keep-size"))
-            mode = Image.RotateMode.PAD_KEEP_SIZE;
-        else
-            return false;
+        Image.RotateMode mode = Image.RotateMode.CROP;
+        if(args.length==2) {
+            if (args[1].equalsIgnoreCase("crop"))
+                mode = Image.RotateMode.CROP;
+            else if (args[1].equalsIgnoreCase("pad"))
+                mode = Image.RotateMode.PAD;
+            else if (args[1].equalsIgnoreCase("pad-keep-size"))
+                mode = Image.RotateMode.PAD_KEEP_SIZE;
+            else
+                return false;
+        }
 
         img.rotate(theta, mode);
         return true;

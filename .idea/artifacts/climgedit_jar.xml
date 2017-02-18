@@ -1,0 +1,9 @@
+<component name="ArtifactManager">
+  <artifact type="jar" name="climgedit:jar">
+    <output-path>$PROJECT_DIR$/out/artifacts/climgedit_jar</output-path>
+    <root id="archive" name="climgedit.jar">
+      <element id="module-output" name="climgedit" />
+      <element id="extracted-dir" path="$PROJECT_DIR$/lib/commons-cli-1.3.1.jar" path-in-jar="/" />
+    </root>
+  </artifact>
+</component>

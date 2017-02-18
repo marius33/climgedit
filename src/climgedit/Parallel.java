@@ -1,4 +1,4 @@
-package main;
+package climgedit;
 
 import java.util.ArrayList;
 

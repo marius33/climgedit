@@ -1,6 +1,6 @@
-package main.gui;
+package climgedit.gui;
 
-import main.CLIOptionsParser;
+import climgedit.CLIOptionsParser;
 
 import javax.imageio.ImageIO;
 import javax.swing.*;
@@ -25,7 +25,7 @@ public class GUI {
     private JButton openButton;
     private JPanel previewPanel;
     private BufferedImage previewImage;
-    private main.Image activeImage;
+    private climgedit.Image activeImage;
     private Dimension preferredDimension;
 
     public GUI() {
@@ -71,7 +71,7 @@ public class GUI {
                     File file = fc.getSelectedFile();
                     try {
                         BufferedImage img = ImageIO.read(file);
-                        activeImage = new main.Image(img);
+                        activeImage = new climgedit.Image(img);
                         displayImage(img);
                     } catch (IOException e1) {
                         e1.printStackTrace();
@@ -84,7 +84,12 @@ public class GUI {
             @Override
             public void mouseClicked(MouseEvent e) {
                 final JFileChooser fc = new JFileChooser();
-                int returnVal = fc.showOpenDialog(root);
+
+                int returnVal = fc.showSaveDialog(root);
+                if(returnVal == JFileChooser.APPROVE_OPTION){
+                    File f = fc.getSelectedFile();
+                    activeImage.saveToFile(f);
+                }
             }
         });
 
@@ -99,6 +104,13 @@ public class GUI {
         });
 
 
+    }
+
+    public void displayImage(climgedit.Image img){
+        if (preferredDimension == null)
+            preferredDimension = previewPanel.getSize();
+        activeImage = img;
+        displayImage(img.getImage());
     }
 
     void displayImage(java.awt.Image img) {

@@ -1,4 +1,4 @@
-package main;
+package climgedit;
 
 import javax.imageio.ImageIO;
 import java.awt.*;
@@ -10,7 +10,8 @@ import java.awt.image.WritableRaster;
 import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
-import java.util.Arrays;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 import java.util.stream.IntStream;
 
 /**
@@ -18,7 +19,7 @@ import java.util.stream.IntStream;
  */
 public class Image {
 
-    public static final double DISTANCE_NORMAL = 255/Math.sqrt(195075);
+    public static final double DISTANCE_NORMAL = 255 / Math.sqrt(195075);
 
     public BufferedImage getImage() {
         return image;
@@ -26,27 +27,42 @@ public class Image {
 
     private BufferedImage image;
 
-    public Image() {
-
-    }
-
     public Image(String path) throws IOException {
         image = ImageIO.read(new File(path));
-        if(image.getType()!=BufferedImage.TYPE_INT_ARGB){
+        if (image.getType() != BufferedImage.TYPE_INT_ARGB) {
             BufferedImage aux = new BufferedImage(image.getWidth(), image.getHeight(), BufferedImage.TYPE_INT_ARGB);
             Graphics g = aux.getGraphics();
-            g.drawImage(image, 0, 0 ,null);
+            g.drawImage(image, 0, 0, null);
             g.dispose();
             image = aux;
         }
     }
 
+    public boolean saveToFile(File f){
+        Matcher m = Pattern.compile("\\.[a-zA-Z0-9]$").matcher(f.getAbsolutePath());
+        String format = "png";
+        if(m.matches()) {
+            format = m.group();
+        }
+        else{
+            File nf = new File(f.getAbsolutePath()+".png");
+            f = nf;
+        }
+        try{
+            ImageIO.write(image, format, f);
+            return true;
+        } catch (IOException e) {
+            e.printStackTrace();
+            return false;
+        }
+    }
+
     public Image(BufferedImage img) {
         image = img;
-        if(image.getType()!=BufferedImage.TYPE_INT_ARGB){
+        if (image.getType() != BufferedImage.TYPE_INT_ARGB) {
             BufferedImage aux = new BufferedImage(image.getWidth(), image.getHeight(), BufferedImage.TYPE_INT_ARGB);
             Graphics g = aux.getGraphics();
-            g.drawImage(image, 0, 0 ,null);
+            g.drawImage(image, 0, 0, null);
             g.dispose();
             image = aux;
         }
@@ -54,27 +70,28 @@ public class Image {
 
     public void rotate(double theta, RotateMode mode) {
 
-        double radians = Math.toRadians(theta);
+        double radians = Math.toRadians(-theta);
 
         int origWidth = image.getWidth();
         int origHeight = image.getHeight();
+        double newWidth = origWidth;
+        double newHeight = origHeight;
 
         if (mode.equals(RotateMode.PAD) || mode.equals(RotateMode.PAD_KEEP_SIZE)) {
-            int diagonal = (int) Math.round(Math.sqrt(image.getHeight() * image.getHeight() + image.getWidth() * image.getWidth()));
-            double alpha = Math.asin(image.getWidth() / diagonal);
-            int newWidth = (int) Math.abs(diagonal * Math.cos(alpha + theta));
-            int newHeight = (int) Math.abs(diagonal * Math.sin(alpha + theta));
-            pad((newWidth - image.getWidth()) / 2, (newHeight - image.getHeight()) / 2);
+            double alpha = Math.atan(origHeight / origWidth);
+            newWidth = origHeight * (Math.abs(Math.sin(theta))) + origWidth * Math.abs((Math.cos(theta)));
+            newHeight = origHeight * (Math.abs(Math.cos(theta))) + origWidth * Math.abs((Math.sin(theta)));
+            pad((int) ((newWidth - origWidth) / 2), (int) ((newHeight - origHeight) / 2));
         }
 
-        double anchorX = image.getWidth() / (double) 2;
-        double anchorY = image.getHeight() / (double) 2;
+        double anchorX = newWidth / 2;
+        double anchorY = newHeight / 2;
         AffineTransform afTransform = AffineTransform.getRotateInstance(radians, anchorX, anchorY);
-        AffineTransformOp afTransfOp = new AffineTransformOp(afTransform, AffineTransformOp.TYPE_BILINEAR);
-        BufferedImage dest = new BufferedImage(origWidth, origHeight, image.getType());
+        AffineTransformOp afTransfOp = new AffineTransformOp(afTransform, AffineTransformOp.TYPE_BICUBIC);
+        BufferedImage dest = new BufferedImage((int) newWidth, (int) newHeight, image.getType());
         image = afTransfOp.filter(image, dest);
 
-        if (mode.equals(RotateMode.PAD)) {
+        if (mode.equals(RotateMode.PAD_KEEP_SIZE)) {
             resize(origWidth, origHeight, ResizeMode.EXACT);
         }
 
@@ -118,9 +135,8 @@ public class Image {
 
         AffineTransform transform = AffineTransform.getScaleInstance(wRatio, hRatio);
         AffineTransformOp op = new AffineTransformOp(transform, AffineTransformOp.TYPE_BICUBIC);
-        // dest = new BufferedImage(dstWidth, dstHeight, image.getType());
-        image = op.filter(image, null);
-        //image = dest;
+        BufferedImage dest = new BufferedImage(dstWidth, dstHeight, image.getType());
+        image = op.filter(image, dest);
 
         int dx = dstWidth - width;
         int dy = dstHeight - height;
@@ -144,7 +160,7 @@ public class Image {
     }
 
     public void pad(int left, int right, int top, int bottom) {
-        pad(left, right, top, bottom, new Color(1));
+        pad(left, right, top, bottom, new Color(1, true));
     }
 
     public void pad(int leftRight, int topBottom, Color c) {
@@ -152,7 +168,7 @@ public class Image {
     }
 
     public void pad(int leftRight, int topBottom) {
-        pad(leftRight, topBottom, new Color(1));
+        pad(leftRight, topBottom, new Color(1, true));
     }
 
     public void pad(int thickness, Color c) {
@@ -160,7 +176,7 @@ public class Image {
     }
 
     public void pad(int thickness) {
-        pad(thickness, new Color(1));
+        pad(thickness, new Color(1, true));
     }
 
     public void crop(int startX, int startY, int width, int height) {
@@ -168,7 +184,7 @@ public class Image {
         Graphics g = dest.getGraphics();
         g.drawImage(image, 0, 0, width, height,
                 startX, startY, startX + width, startY + height,
-                new Color(1), null);
+                new Color(1, true), null);
         g.dispose();
         image = dest;
 
@@ -180,7 +196,7 @@ public class Image {
         crop(startX, startY, width, height);
     }
 
-    public void replaceColors(Color src, Color dst, int range){
+    public void replaceColors(Color src, Color dst, int range) {
         replaceColors(src, dst, range, range);
     }
 
@@ -191,49 +207,65 @@ public class Image {
         int[] rgbaSrc = new int[]{src.getRed(), src.getGreen(), src.getBlue(), src.getAlpha()};
         int[] rgbaDest = new int[]{dst.getRed(), dst.getGreen(), dst.getBlue(), dst.getAlpha()};
 
-        for (int x = 0; x < image.getWidth(); x++)
-            for (int y = 0; y < image.getHeight(); y++) {
+        int threadCount = Runtime.getRuntime().availableProcessors();
+        ArrayList<Thread> threads = new ArrayList<>(threadCount - 1);
 
+        final int rangePerThread = image.getHeight() / (threadCount - 1);
+        final int mainThreadRange = image.getHeight() % (threadCount - 1);
+
+        for (int t = 0; t < threadCount - 1; t++) {
+            final int threadNumber = t;
+            Thread th = new Thread(new Runnable() {
+                @Override
+                public void run() {
+                    for (int y = (threadNumber * rangePerThread + mainThreadRange); y < ((threadNumber + 1) * rangePerThread + mainThreadRange); y++)
+                        for (int x = 0; x < image.getWidth(); x++) {
+                            int[] channels = new int[4];
+                            channels = srcData.getPixel(x, y, channels);
+                            double dr = rgbaSrc[0] - channels[0];
+                            double dg = rgbaSrc[1] - channels[1];
+                            double db = rgbaSrc[2] - channels[2];
+
+                            double distance = Math.sqrt(dr * dr + dg * dg + db * db) * DISTANCE_NORMAL;
+                            int alphaDistance = Math.abs(rgbaSrc[3] - channels[3]);
+
+                            if (distance <= colorRange && alphaDistance <= alphaRange)
+                                destData.setPixel(x, y, rgbaDest);
+                            else
+                                destData.setPixel(x, y, channels);
+                        }
+                }
+            });
+            threads.add(th);
+            th.start();
+        }
+
+        for (int y = 0; y < mainThreadRange; y++)
+            for (int x = 0; x < image.getWidth(); x++) {
                 int[] channels = new int[4];
                 channels = srcData.getPixel(x, y, channels);
                 double dr = rgbaSrc[0] - channels[0];
                 double dg = rgbaSrc[1] - channels[1];
                 double db = rgbaSrc[2] - channels[2];
 
-                double distance = Math.sqrt(dr * dr + dg * dg + db * db)*DISTANCE_NORMAL;
-                int alphaDistance = Math.abs(rgbaSrc[3]-channels[3]);
+                double distance = Math.sqrt(dr * dr + dg * dg + db * db) * DISTANCE_NORMAL;
+                int alphaDistance = Math.abs(rgbaSrc[3] - channels[3]);
 
                 if (distance <= colorRange && alphaDistance <= alphaRange)
                     destData.setPixel(x, y, rgbaDest);
                 else
                     destData.setPixel(x, y, channels);
-
-
             }
 
-//        int threadCount = Runtime.getRuntime().availableProcessors();
-//        ArrayList<Thread> threads = new ArrayList<Thread>(threadCount - 1);
-//
-//        int rangePerThread = image.getHeight() / threadCount;
-//        int mainThreadRange = rangePerThread + (image.getHeight() % threadCount);
-//
-//        for (int t = 1; t < threadCount; t++) {
-//            final int threadNumber = t;
-//            threads.add(new Thread(new Runnable() {
-//                @Override
-//                public void run() {
-//                    for (int y = (threadNumber * rangePerThread); y < ((threadNumber + 1) * rangePerThread); y++)
-//                        for (int x = 0; x < image.getWidth(); x++) {
-//                            int[] channels = new int[4];
-//                            channels = srcData.getPixel(x, y, channels);
-//                            for (int i = 0; i < 4; i++) {
-//                                if (channels[i] <= (rgbaSrc[i] + threshold) && channels[i] >= (rgbaSrc[i] - threshold))
-//                                    destData.setPixel(x, y, rgbaDest);
-//                            }
-//                        }
-//                }
-//            }));
-//        }
+        while (true) {
+            try {
+                for (Thread t : threads)
+                    t.join();
+                break;
+            } catch (InterruptedException e) {
+                e.printStackTrace();
+            }
+        }
 
         image.setData(destData);
     }
