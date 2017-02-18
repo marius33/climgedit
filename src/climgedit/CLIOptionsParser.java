@@ -5,7 +5,7 @@ import java.awt.*;
 /**
  * Created by Marius on 12/02/2017.
  */
-public class CLIOptionsParser {
+class CLIOptionsParser {
 
     public static boolean parseRotate(Image img, String[] args){
 
