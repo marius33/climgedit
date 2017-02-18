@@ -19,7 +19,7 @@ import java.util.stream.IntStream;
  */
 public class Image {
 
-    public static final double DISTANCE_NORMAL = 255 / Math.sqrt(195075);
+    private static final double DISTANCE_NORMAL = 255 / Math.sqrt(195075);
 
     public BufferedImage getImage() {
         return image;

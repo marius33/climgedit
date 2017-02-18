@@ -6,7 +6,6 @@ import java.util.Iterator;
 
 import javax.swing.*;
 
-import climgedit.gui.GUI;
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.CommandLineParser;
 import org.apache.commons.cli.DefaultParser;

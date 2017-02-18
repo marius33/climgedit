@@ -1,4 +1,4 @@
-package climgedit.gui;
+package climgedit;
 
 import climgedit.CLIOptionsParser;
 
@@ -15,7 +15,7 @@ import java.util.Arrays;
 /**
  * Created by Marius on 08/02/2017.
  */
-public class GUI {
+class GUI {
     private JButton saveButton;
     private JButton executeButton;
     public JPanel root;
